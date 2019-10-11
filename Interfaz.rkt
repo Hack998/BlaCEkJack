@@ -1,4 +1,5 @@
 #lang racket/gui
+(require "Logica.rkt")
 (define frame (new frame%
                    [label "BlaCEkJack"]
                    [style '(hide-menu-bar)]
@@ -48,7 +49,7 @@
   (send tfield2 set-value "-")
   (send tfield3 set-value "-")
   )
-;; estudiar lambda
+
 (define(bCEj list1)
   (send frame show #t)
   (send dialog show #f)
