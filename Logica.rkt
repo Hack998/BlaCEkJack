@@ -292,16 +292,6 @@
                   ))
        ))
 
-
-;;===================================================================================================================================
-;; (cargar (actualizar '("a" "b" "r") '(0 0 0 0)) 1)
-(define (cargar list1 num1)
-  (cond((equal? num1 1) (list (car list1) (cadr list1) (append (list (+ 3 (caaddr list1))) (cdaddr list1)) (append (list(append (list "H4") (car(cadddr list1)))) (cdr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 2) (list (car list1) (cadr list1) (append (list (caaddr list1) (+ 3 (car(cdaddr list1)))) (cdr(cdaddr list1))) (append (list (car(cadddr list1))) (list(append (list "H4") (cadr(cadddr list1)))) (cddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 3) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (+ 3 (cadr(cdaddr list1)))) (cddr(cdaddr list1))) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(append (list "H4") (caddr(cadddr list1)))) (cdddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 4) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (cadr(cdaddr list1)) (+ 3 (caddr(cdaddr list1)))) (list)) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(caddr(cadddr list1)))(list(append (list "H4") (cadddr(cadddr list1)))) (list)) (car(cddddr list1)) (cadr(cddddr list1))))
-       ))
-
 ;; ==================================================================================================================================
 ;; Random Value
 ;; Choose a random value smaller than set limit
@@ -378,53 +368,93 @@
    )
 )
 
-;; ==================================================================================================================================
-;; cardsDeck
-;; Shuffle the cards deck and deal them randomly
-;; ==================================================================================================================================
-(define (cardsDeck)
-  (cardsDeck_aux (rndCard cards 52)))
+;;===================================================================================================================================
+;; Deal A Card
+;; Deal a card to player who ask for one
+;; list1: list passed by user interface
+;; plyr: number of Player who ask for card
+;;===================================================================================================================================
 
-(define (cardsDeck_aux card)
-  (cond ((equal? (string-ref card 0) #\A)
-         (cardId card "As"))
-        ((equal? (string-ref card 0) #\B)
-         (cardId card "2"))
-        ((equal? (string-ref card 0) #\C)
-         (cardId card "3"))
-        ((equal? (string-ref card 0) #\D)
-         (cardId card "4"))
-        ((equal? (string-ref card 0) #\E)
-         (cardId card "5"))
-        ((equal? (string-ref card 0) #\F)
-         (cardId card "6"))
-        ((equal? (string-ref card 0) #\G)
-         (cardId card "7"))
-        ((equal? (string-ref card 0) #\H)
-         (cardId card "8"))
-        ((equal? (string-ref card 0) #\I)
-         (cardId card "9"))
-        ((equal? (string-ref card 0) #\J)
-         (cardId card "10"))
-        ((equal? (string-ref card 0) #\K)
-         (cardId card "Jota"))
-        ((equal? (string-ref card 0) #\L)
-         (cardId card "Quina"))
-        ((equal? (string-ref card 0) #\M)
-         (cardId card "Ka"))
-   )
-)
-
-(define (cardId card id)
-  (cond ((equal? (string-ref card 1) #\1)
-         (write (string-append "¡" id " de corazones!")))
-        ((equal? (string-ref card 1) #\2)
-         (write (string-append "¡" id " de treboles!")))
-        ((equal? (string-ref card 1) #\3)
-         (write (string-append "¡" id " de diamantes!")))
-        ((equal? (string-ref card 1) #\4)
-         (write (string-append "¡" id " de espadas!")))
+(define (dealACard list1 plyr)
+  (cond ((null? list1)
+         '())
+        (else
+         (dealACard_aux list1 plyr (caar(cddddr list1))))
   )
 )
 
+(define (dealACard_aux list1 plyr card)
+  (cond((equal? plyr 1)
+        (list (car list1) (cadr list1) (append (list (+ (cardId list1 plyr card) (caaddr list1))) (cdaddr list1)) (append (list(append (list card) (car(cadddr list1)))) (cdr(cadddr list1))) (cdar(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? plyr 2)
+        (list (car list1) (cadr list1) (append (list (caaddr list1) (+ (cardId list1 plyr card) (car(cdaddr list1)))) (cdr(cdaddr list1))) (append (list (car(cadddr list1))) (list(append (list card) (cadr(cadddr list1)))) (cddr(cadddr list1))) (cdar(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? plyr 3)
+        (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (+ (cardId list1 plyr card) (cadr(cdaddr list1)))) (cddr(cdaddr list1))) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(append (list card) (caddr(cadddr list1)))) (cdddr(cadddr list1))) (cdar(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? plyr 4)
+        (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (cadr(cdaddr list1)) (+ (cardId list1 plyr card) (caddr(cdaddr list1)))) (list)) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(caddr(cadddr list1)))(list(append (list card) (cadddr(cadddr list1)))) (list)) (cdar(cddddr list1)) (cadr(cddddr list1))))
+       ))
+
+;; ==================================================================================================================================
+;; Card Id
+;; Identify the card an its value. Return the value of the card. 
+;; card: card to identify
+;; ==================================================================================================================================
+(define (cardId list1 plyr card)
+  (cond ((equal? (string-ref card 0) #\A)
+         (asCase (caddr list1) plyr))
+        ((equal? (string-ref card 0) #\B)
+         2)
+        ((equal? (string-ref card 0) #\C)
+         3)
+        ((equal? (string-ref card 0) #\D)
+         4)
+        ((equal? (string-ref card 0) #\E)
+         5)
+        ((equal? (string-ref card 0) #\F)
+         6)
+        ((equal? (string-ref card 0) #\G)
+         7)
+        ((equal? (string-ref card 0) #\H)
+         8)
+        ((equal? (string-ref card 0) #\I)
+         9)
+        (else
+         10)
+   )
+)
+
+;; ==================================================================================================================================
+;; As Case
+;; Verify the As case to check if player needs the As card to count 1 or 11.
+;; pts: list of player points until now
+;; plyr: player number who ask for one more card
+;; ==================================================================================================================================
+
+(define (asCase pts plyr)
+  (cond ((equal? plyr 1)
+         (cond ((> (+ (car pts) 11) 21)
+                 1)
+                (else
+                 11)
+          ))
+        ((equal? plyr 2)
+         (cond ((> (+ (cadr pts) 11) 21)
+                1)
+                (else
+                 11)
+          ))
+        ((equal? plyr 3)
+         (cond ((> (+ (caddr pts) 11) 21)
+                 1)
+                (else
+                 11)
+          ))
+        ((equal? plyr 4)
+         (cond ((> (+ (cadddr pts) 11) 21)
+                 1)
+                (else
+                 11)
+          ))
+   )
+)
 (provide (all-defined-out))
