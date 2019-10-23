@@ -1,73 +1,164 @@
 #lang racket
+(require racket/draw
+         net/url)
 
 (define cards '("A1" "B1" "C1" "D1" "E1" "F1" "G1" "H1" "I1" "J1" "K1" "L1" "M1"
                 "A2" "B2" "C2" "D2" "E2" "F2" "G1" "H2" "I2" "J2" "K2" "L2" "M2"
                 "A3" "B3" "C3" "D3" "E3" "F3" "G3" "H3" "I3" "J3" "K3" "L3" "M3"
                 "A4" "B4" "C4" "D4" "E4" "F4" "G4" "H4" "I4" "J4" "K4" "L4" "M4"))
 
-;; (actualizar '("a" "b" "r") '(0 0 0 0))
-(define(actualizar list1 listnum)
-  (cond((equal? (contar list1) 1) (list (actualizar_aux list1) (list (car listnum) (cadr listnum)) '(0 0) '(("B1" "C1") ("D1" "E1")) (shuffleDeck cards 51) 1))
-       ((equal? (contar list1) 2) (list (actualizar_aux list1) (list (car listnum) (cadr listnum) (caddr listnum)) '(0 0 0) '(("B2" "C2") ("D2" "E2") ("F2" "G2")) (shuffleDeck cards 51) 2))
-       (else (list (actualizar_aux list1) (list (car listnum) (cadr listnum) (caddr listnum) (cadddr listnum)) '(0 0 0 0) '(("B3" "C3") ("D3" "E3") ("F3" "G3") ("H3" "I3")) (shuffleDeck cards 51) 3))
+;; ==================================================================================================================================
+;; Actualize
+;; Initializes the data of the players
+;; list1: List with the names of the players
+;; listnum: List containing the victories of the players
+;; ==================================================================================================================================
+(define(actualize list1 listnum)
+  (cond((equal? (count list1) 1) (list (actualize_aux list1) (list (car listnum) (cadr listnum)) '(0 0) '(() ()) (shuffleDeck cards 51) 1))
+       ((equal? (count list1) 2) (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum)) '(0 0 0) '(() () ()) (shuffleDeck cards 51) 2))
+       (else (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum) (cadddr listnum)) '(0 0 0 0) '(() () () ()) (shuffleDeck cards 51) 3))
        ))
 
-(define(actualizar_aux list1)
+(define(actualize_aux list1)
   (cond((null? list1) '("Crupier"))
-       ((equal?  (car list1) "-") (actualizar_aux (cdr list1)))
-       (else (cons (car list1) (actualizar_aux (cdr list1))))
+       ((equal?  (car list1) "-") (actualize_aux (cdr list1)))
+       (else (cons (car list1) (actualize_aux (cdr list1))))
        ))
 
-(define(contar list1)
+;; ==================================================================================================================================
+;; Start values
+;; Give each player his score
+;; list1: List with all the data players
+;; ==================================================================================================================================
+(define (start_values list1)
+  (cond((equal? (cadr (cddddr list1)) 1) (list (car list1) (cadr list1) (list (start_value_aux (car(cadddr list1)) (caaddr list1)) (start_value_aux (cdadr(cadddr list1)) (car(cdaddr list1)))) (cadddr list1) (cdr(cdddar(cddddr list1))) (cadr(cddddr list1))))
+       ((equal? (cadr (cddddr list1)) 2) (list (car list1) (cadr list1) (list (start_value_aux (car(cadddr list1)) (caaddr list1)) (start_value_aux (cadr(cadddr list1)) (car(cdaddr list1))) (start_value_aux (cdaddr(cadddr list1)) (cadr(cdaddr list1)))) (cadddr list1) (cdddr(cdddar(cddddr list1))) (cadr(cddddr list1))))
+       (else (list (car list1) (cadr list1) (list (start_value_aux (car(cadddr list1)) (caaddr list1)) (start_value_aux (cadr(cadddr list1)) (car(cdaddr list1))) (start_value_aux (caddr(cadddr list1)) (cadr(cdaddr list1))) (start_value_aux (cdr(cadddr(cadddr list1))) (caddr(cdaddr list1)))) (cadddr list1) (cdr(cddddr(cdddar(cddddr list1)))) (cadr(cddddr list1))))
+       ))
+
+(define (start_value_aux list1 score)
+  (cond((null? list1) score)
+       (else (cond ((equal? (string-ref (car list1) 0) #\A)
+                    (cond((> score 10) (start_value_aux (cdr list1) (+ 1 score)))
+                         (else (start_value_aux (cdr list1) (+ 11 score)))))
+                   ((equal? (string-ref (car list1) 0) #\B)
+                    (start_value_aux (cdr list1) (+ 2 score)))
+                   ((equal? (string-ref (car list1) 0) #\C)
+                    (start_value_aux (cdr list1) (+ 3 score)))
+                   ((equal? (string-ref (car list1) 0) #\D)
+                    (start_value_aux (cdr list1) (+ 4 score)))
+                   ((equal? (string-ref (car list1) 0) #\E)
+                    (start_value_aux (cdr list1) (+ 5 score)))
+                   ((equal? (string-ref (car list1) 0) #\F)
+                    (start_value_aux (cdr list1) (+ 6 score)))
+                   ((equal? (string-ref (car list1) 0) #\G)
+                    (start_value_aux (cdr list1) (+ 7 score)))
+                   ((equal? (string-ref (car list1) 0) #\H)
+                    (start_value_aux (cdr list1) (+ 8 score)))
+                   ((equal? (string-ref (car list1) 0) #\I)
+                    (start_value_aux (cdr list1) (+ 9 score)))
+                   (else
+                    (start_value_aux (cdr list1) (+ 10 score)))
+                   ))
+       ))
+
+;; ==================================================================================================================================
+;; Crupier values
+;; Restart the Crupier score
+;; list1: List with all the data players
+;; ==================================================================================================================================
+(define (crupier_values list1)
+  (cond((equal? (cadr (cddddr list1)) 1) (list (car list1) (cadr list1)
+                                               (list (caaddr list1) (start_value_aux (list(caadr(cadddr list1))) (car(cdaddr list1))))
+                                               (cadddr list1) (car(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? (cadr (cddddr list1)) 2) (list (car list1) (cadr list1)
+                                               (list (caaddr list1) (car(cdaddr list1)) (start_value_aux (list(caaddr(cadddr list1))) (cadr(cdaddr list1))))
+                                               (cadddr list1) (car(cddddr list1)) (cadr(cddddr list1))))
+       (else (list (car list1) (cadr list1)
+                   (list (caaddr list1) (car(cdaddr list1)) (cadr(cdaddr list1)) (start_value_aux (list(car(cadddr(cadddr list1)))) (caddr(cdaddr list1))))
+                   (cadddr list1) (car(cddddr list1)) (cadr(cddddr list1))))
+       ))
+
+;; ==================================================================================================================================
+;; Count
+;; Get the length of a list
+;; list1: List you want to know the length
+;; ==================================================================================================================================
+(define(count list1)
   (cond((null? list1) 0)
-       ((equal? (car list1) "-") (+ 0 (contar (cdr list1))))
-       ((equal? (car list1) "Crupier") (+ 0 (contar (cdr list1))))
-       (else (+ 1 (contar (cdr list1))))
+       ((equal? (car list1) "-") (+ 0 (count (cdr list1))))
+       ((equal? (car list1) "Crupier") (+ 0 (count (cdr list1))))
+       (else (+ 1 (count (cdr list1))))
        ))
 
-;; (mayor(caddr(actualizar '("a" "b" "r"))))
-(define(mayor lista)
-  (cond((null? lista) '())
-       (else (mayor_aux (car lista) (cdr lista)))
+;; ==================================================================================================================================
+;; Bigger
+;; Search the maximum of a list
+;; list1: List to which you want to find the maximum
+;; ==================================================================================================================================
+(define(bigger list1)
+  (cond((null? list1) '())
+       (else (bigger_aux (car list1) (cdr list1)))
        ))
-(define(mayor_aux ele lista)
-  (cond((null? lista) ele)
-       ((< ele (car lista)) (mayor_aux (car lista) (cdr lista)))
-       (else (mayor_aux ele (cdr lista)))
+
+(define(bigger_aux ele list1)
+  (cond((null? list1) ele)
+       ((< ele (car list1)) (bigger_aux (car list1) (cdr list1)))
+       (else (bigger_aux ele (cdr list1)))
        ))
+
+;; ==================================================================================================================================
+;; Eliminate
+;; Remove an item from a list
+;; list1: List that an object will be deleted
+;; num: Indicate which is the item to remove
+;; ==================================================================================================================================
+(define(eliminate list1 num)
+  (list (eliminate_aux(car list1) num) (eliminate_aux(cadr list1)num) (eliminate_aux(caddr list1)num) (cadddr list1) (car(cddddr list1)) (cadr(cddddr list1))))
+
 (define (eliminate_aux list1 num)
   (cond((equal? num 0) (cdr list1))
        (else (cons (car list1) (eliminate_aux (cdr list1) (- num 1))))
        ))
-;;(eliminate (actualizar '("a" "b" "r")) 1)
-(define(eliminate list1 num)
-  (list (eliminate_aux(car list1) num) (eliminate_aux(cadr list1)num) (eliminate_aux(caddr list1)num) (cadddr list1) (car(cddddr list1)) (cadr(cddddr list1))))
 
-;; (winner '(("Crupier" 17 "No" 1) ("a" 0 "No" 1) ("b" 0 "No" 1) ("r" 0 "No" 1)) 1)
+;; ==================================================================================================================================
+;; Winner
+;; Select the winner
+;; list1: List containing the possible winners
+;; num: Indicate how many winners there can be
+;; ==================================================================================================================================
 (define(winner list1 num)
   (cond((equal? num 0) list1)
        ((< 21 (cadar list1)) (cons (car list1) (winner (cdr list1) num)))
        (else (cons (list (caar list1) (cadar list1) "Yes" (+ 1 (car(cdddar list1)))) (winner (cdr list1) 0)))
        ))
 
-;; (table (actualizar '("a" "b" "c") '(0 0 0 0)))
+;; ==================================================================================================================================
+;; Table
+;; Organize the possible winners
+;; list1: List passed by user interface
+;; ==================================================================================================================================
 (define(table list1)
-  (append (list (cadr(cddddr list1))) (winner(table_aux list1 (mayor (caddr list1)))1) (list(car list1))))
+  (append (list (cadr(cddddr list1))) (winner(table_aux list1 (bigger (caddr list1)))1) (list(car list1))))
 
 (define(table_aux list1 max)
   (cond((null? max) '())
        ((equal? max (caaddr list1)) (cons (list (caar list1) (caaddr list1) "" (caadr list1))
-                                          (table_aux (eliminate list1 0) (mayor (eliminate_aux(caddr list1) 0)))))
+                                          (table_aux (eliminate list1 0) (bigger (eliminate_aux(caddr list1) 0)))))
        ((equal? max (car (cdaddr list1))) (cons(list (cadar list1) (car (cdaddr list1)) "" (cadadr list1))
-                                          (table_aux (eliminate list1 1) (mayor (eliminate_aux(caddr list1) 1)))))
+                                          (table_aux (eliminate list1 1) (bigger (eliminate_aux(caddr list1) 1)))))
        ((equal? max (cadr(cdaddr list1))) (cons(list (caddar list1) (cadr(cdaddr list1)) "" (car(cddadr list1)))
-                                          (table_aux (eliminate list1 2) (mayor (eliminate_aux(caddr list1) 2)))))
+                                          (table_aux (eliminate list1 2) (bigger (eliminate_aux(caddr list1) 2)))))
        ((equal? max (caddr(cdaddr list1))) (cons(list (car(cdddar list1)) (caddr(cdaddr list1)) "" (cadr(cddadr list1)))
-                                           (table_aux (eliminate list1 3) (mayor (eliminate_aux(caddr list1) 3)))))
+                                           (table_aux (eliminate list1 3) (bigger (eliminate_aux(caddr list1) 3)))))
        ))
 
-;; (order 3 '(("Crupier" 17 "Yes" 1) ("a" 0 "" 5) ("b" 0 "" 6) ("c" 0 "" 7) ("a" "b" "c" "Crupier")))
-
+;; ==================================================================================================================================
+;; Order
+;; Organize the streaks according to the name of the player
+;; list1: List passed by user interface
+;; num: Number of players
+;; ==================================================================================================================================
 (define(order num list1)
   (cond((equal? num 1) (cond((null? (caddr list1))'())
                             ((equal? (caaddr list1) (caar list1)) (cons (car(cdddar list1)) (order num (list (car list1) (cadr list1) (cdaddr list1)))))
@@ -86,13 +177,129 @@
                   ))
        ))
 
+;; ==================================================================================================================================
+;; Set logo
+;; Select the image that corresponds to each possible card
+;; cart: Class name of the letter to look for
+;; num1: Identify the size of the image
+;; ==================================================================================================================================
+(define(set-logo cart num1)
+  (cond((equal? num1 1) (cond((equal? cart "A1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CAs.png"))))
+                             ((equal? cart "B1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C2.png"))))
+                             ((equal? cart "C1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C3.png"))))
+                             ((equal? cart "D1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C4.png"))))
+                             ((equal? cart "E1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C5.png"))))
+                             ((equal? cart "F1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C6.png"))))
+                             ((equal? cart "G1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C7.png"))))
+                             ((equal? cart "H1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C8.png"))))
+                             ((equal? cart "I1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C9.png"))))
+                             ((equal? cart "J1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C10.png"))))
+                             ((equal? cart "K1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CJ.png"))))
+                             ((equal? cart "L1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CQ.png"))))
+                             ((equal? cart "M1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CK.png"))))
+                             ((equal? cart "A2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TAs.png"))))
+                             ((equal? cart "B2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T2.png"))))
+                             ((equal? cart "C2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T3.png"))))
+                             ((equal? cart "D2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T4.png"))))
+                             ((equal? cart "E2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T5.png"))))
+                             ((equal? cart "F2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T6.png"))))
+                             ((equal? cart "G2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T7.png"))))
+                             ((equal? cart "H2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T8.png"))))
+                             ((equal? cart "I2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T9.png"))))
+                             ((equal? cart "J2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T10.png"))))
+                             ((equal? cart "K2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TJ.png"))))
+                             ((equal? cart "L2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TQ.png"))))
+                             ((equal? cart "M2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TK.png"))))
+                             ((equal? cart "A3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RAs.png"))))
+                             ((equal? cart "B3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R2.png"))))
+                             ((equal? cart "C3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R3.png"))))
+                             ((equal? cart "D3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R4.png"))))
+                             ((equal? cart "E3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R5.png"))))
+                             ((equal? cart "F3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R6.png"))))
+                             ((equal? cart "G3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R7.png"))))
+                             ((equal? cart "H3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R8.png"))))
+                             ((equal? cart "I3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R9.png"))))
+                             ((equal? cart "J3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R10.png"))))
+                             ((equal? cart "K3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RJ.png"))))
+                             ((equal? cart "L3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RQ.png"))))
+                             ((equal? cart "M3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RK.png"))))
+                             ((equal? cart "A4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PAs.png"))))
+                             ((equal? cart "B4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P2.png"))))
+                             ((equal? cart "C4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P3.png"))))
+                             ((equal? cart "D4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P4.png"))))
+                             ((equal? cart "E4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P5.png"))))
+                             ((equal? cart "F4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P6.png"))))
+                             ((equal? cart "G4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P7.png"))))
+                             ((equal? cart "H4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P8.png"))))
+                             ((equal? cart "I4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P9.png"))))
+                             ((equal? cart "J4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P10.png"))))
+                             ((equal? cart "K4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PJ.png"))))
+                             ((equal? cart "L4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PQ.png"))))
+                             ((equal? cart "M4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PK.png"))))
+                             ))
+       (else (cond((equal? cart "A1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CAs (1).png"))))
+                  ((equal? cart "B1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C2 (1).png"))))
+                  ((equal? cart "C1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C3 (1).png"))))
+                  ((equal? cart "D1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C4 (1).png"))))
+                  ((equal? cart "E1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C5 (1).png"))))
+                  ((equal? cart "F1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C6 (1).png"))))
+                  ((equal? cart "G1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C7 (1).png"))))
+                  ((equal? cart "H1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C8 (1).png"))))
+                  ((equal? cart "I1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C9 (1).png"))))
+                  ((equal? cart "J1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/C10 (1).png"))))
+                  ((equal? cart "K1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CJ (1).png"))))
+                  ((equal? cart "L1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CQ (1).png"))))
+                  ((equal? cart "M1") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/CK (1).png"))))
+                  ((equal? cart "A2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TAs (1).png"))))
+                  ((equal? cart "B2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T2 (1).png"))))
+                  ((equal? cart "C2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T3 (1).png"))))
+                  ((equal? cart "D2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T4 (1).png"))))
+                  ((equal? cart "E2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T5 (1).png"))))
+                  ((equal? cart "F2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T6 (1).png"))))
+                  ((equal? cart "G2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T7 (1).png"))))
+                  ((equal? cart "H2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T8 (1).png"))))
+                  ((equal? cart "I2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T9 (1).png"))))
+                  ((equal? cart "J2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/T10 (1).png"))))
+                  ((equal? cart "K2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TJ (1).png"))))
+                  ((equal? cart "L2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TQ (1).png"))))
+                  ((equal? cart "M2") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TK(1).png"))))
+                  ((equal? cart "A3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RAs (1).png"))))
+                  ((equal? cart "B3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R2 (1).png"))))
+                  ((equal? cart "C3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R3 (1).png"))))
+                  ((equal? cart "D3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R4 (1).png"))))
+                  ((equal? cart "E3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R5 (1).png"))))
+                  ((equal? cart "F3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R6 (1).png"))))
+                  ((equal? cart "G3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R7 (1).png"))))
+                  ((equal? cart "H3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R8 (1).png"))))
+                  ((equal? cart "I3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R9 (1).png"))))
+                  ((equal? cart "J3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/R10 (1).png"))))
+                  ((equal? cart "K3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RJ (1).png"))))
+                  ((equal? cart "L3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RQ (1).png"))))
+                  ((equal? cart "M3") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/RK (1).png"))))
+                  ((equal? cart "A4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PAs (1).png"))))
+                  ((equal? cart "B4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P2 (1).png"))))
+                  ((equal? cart "C4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P3 (1).png"))))
+                  ((equal? cart "D4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P4 (1).png"))))
+                  ((equal? cart "E4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P5 (1).png"))))
+                  ((equal? cart "F4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P6 (1).png"))))
+                  ((equal? cart "G4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P7 (1).png"))))
+                  ((equal? cart "H4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P8 (1).png"))))
+                  ((equal? cart "I4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P9 (1).png"))))
+                  ((equal? cart "J4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/P10 (1).png"))))
+                  ((equal? cart "K4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PJ (1).png"))))
+                  ((equal? cart "L4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PQ (1).png"))))
+                  ((equal? cart "M4") (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/PK (1).png"))))
+                  ))
+       ))
+
+
 ;;===================================================================================================================================
 ;; (cargar (actualizar '("a" "b" "r") '(0 0 0 0)) 1)
 (define (cargar list1 num1)
-  (cond((equal? num1 1) (list (car list1) (cadr list1) (append (list (+ 3 (caaddr list1))) (cdaddr list1)) (append (list(append (list "H9") (car(cadddr list1)))) (cdr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 2) (list (car list1) (cadr list1) (append (list (caaddr list1) (+ 3 (car(cdaddr list1)))) (cdr(cdaddr list1))) (append (list (car(cadddr list1))) (list(append (list "H9") (cadr(cadddr list1)))) (cddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 3) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (+ 3 (cadr(cdaddr list1)))) (cddr(cdaddr list1))) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(append (list "H9") (caddr(cadddr list1)))) (cdddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
-       ((equal? num1 4) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (cadr(cdaddr list1)) (+ 3 (caddr(cdaddr list1)))) (list)) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(caddr(cadddr list1)))(list(append (list "H9") (cadddr(cadddr list1)))) (list)) (car(cddddr list1)) (cadr(cddddr list1))))
+  (cond((equal? num1 1) (list (car list1) (cadr list1) (append (list (+ 3 (caaddr list1))) (cdaddr list1)) (append (list(append (list "H4") (car(cadddr list1)))) (cdr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? num1 2) (list (car list1) (cadr list1) (append (list (caaddr list1) (+ 3 (car(cdaddr list1)))) (cdr(cdaddr list1))) (append (list (car(cadddr list1))) (list(append (list "H4") (cadr(cadddr list1)))) (cddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? num1 3) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (+ 3 (cadr(cdaddr list1)))) (cddr(cdaddr list1))) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(append (list "H4") (caddr(cadddr list1)))) (cdddr(cadddr list1))) (car(cddddr list1)) (cadr(cddddr list1))))
+       ((equal? num1 4) (list (car list1) (cadr list1) (append (list (caaddr list1) (car(cdaddr list1)) (cadr(cdaddr list1)) (+ 3 (caddr(cdaddr list1)))) (list)) (append (list (car(cadddr list1))) (list(cadr(cadddr list1))) (list(caddr(cadddr list1)))(list(append (list "H4") (cadddr(cadddr list1)))) (list)) (car(cddddr list1)) (cadr(cddddr list1))))
        ))
 
 ;; ==================================================================================================================================
@@ -219,6 +426,5 @@
          (write (string-append "¡" id " de espadas!")))
   )
 )
-
 
 (provide (all-defined-out))

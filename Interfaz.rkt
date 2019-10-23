@@ -3,15 +3,17 @@
 (require racket/format)
 (require racket/draw
          net/url)
-;;=================================================================================================================================
-(define puntuacion (new dialog% [label "BlaCEkJack"] [width 1000]))
+;; ==================================================================================================================================
+;; Score screen
+;; ==================================================================================================================================
+(define d-score (new dialog% [label "BlaCEkJack"] [width 1000]))
 
-(define title(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
-(define row_first(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
-(define row_second(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
-(define row_third(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
-(define row_quarter(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
-(define buttons(new horizontal-panel% [parent puntuacion] [stretchable-height #t]))
+(define title(new horizontal-panel% [parent d-score] [stretchable-height #t]))
+(define row_first(new horizontal-panel% [parent d-score] [stretchable-height #t]))
+(define row_second(new horizontal-panel% [parent d-score] [stretchable-height #t]))
+(define row_third(new horizontal-panel% [parent d-score] [stretchable-height #t]))
+(define row_quarter(new horizontal-panel% [parent d-score] [stretchable-height #t]))
+(define buttons(new horizontal-panel% [parent d-score] [stretchable-height #t]))
 
 (new message% [parent title] [label "Name"] [font (make-object font% 20 'default)] [stretchable-width #t])
 (new message% [parent title] [label "Score"] [font (make-object font% 20 'default)] [stretchable-width #t])
@@ -39,21 +41,37 @@
 (define quarter_s(new message% [parent row_quarter] [label ""] [font (make-object font% 20 'default)] [stretchable-width #t]))
 
 (new button% [parent buttons] [stretchable-width #t] [label "Play Again"] [callback (lambda (button event)(re_play))])
-(new button% [parent buttons] [stretchable-width #t] [label "Finish"] [callback (lambda (button event)(send puntuacion show #f)
+(new button% [parent buttons] [stretchable-width #t] [label "Finish"] [callback (lambda (button event)(send d-score show #f)
                                                                                   (send frame show #f))])
+
+(define empty (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/E.png"))))
+(define empty1 (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/E(1).png"))))
+
+(define (clear list1)
+  (cond((null? list1))
+       (else (send (car list1) set-label empty)
+             (clear (cdr list1)))
+       ))
+
 
 (define(re_play)
   (cond((equal? (car list3) 1) (send bas2 set-label "")
-                                         (set! list3 (sets-values (actualizar (cadddr list3) (order 1 (cdr list3))))))
+                               (clear (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24 c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48))
+                               (set! list3 (sets-values (start_values(dealCards(actualize (list (car(cadddr list3))) (order 1 (cdr list3))))) 0))
+                               (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        ((equal? (car list3) 2) (send bas1 set-label "")
-                                         (send bas3 set-label "")
-                                         (set! list3 (sets-values (actualizar (car(cddddr list3)) (order 2 (cdr list3))))))
+                               (send bas3 set-label "")
+                               (clear (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36 c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48))
+                               (set! list3 (sets-values (start_values(dealCards(actualize (list (caar(cddddr list3)) (cadar(cddddr list3))) (order 2 (cdr list3))))) 0))
+                               (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        (else (send bas1 set-label "")
              (send bas2 set-label "")
              (send bas3 set-label "")
-             (set! list3 (sets-values (actualizar (cadr(cddddr list3)) (order 3 (cdr list3))))))
+             (clear (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24 c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36 c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48))
+             (set! list3 (sets-values (start_values(dealCards(actualize (list (caadr(cddddr list3)) (cadadr(cddddr list3)) (car(cddadr(cddddr list3)))) (order 3 (cdr list3)))))0))
+             (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        )
-  (send puntuacion show #f)
+  (send d-score show #f)
   )
 (define (set-score list1)
   (cond((equal? (car list1) 1) (send first set-label (caadr list1))
@@ -94,10 +112,12 @@
              (send quarter_s set-label (~v (car(cdddar(cddddr list1))))))
        )
   (set! list3 list1)
-  (send puntuacion show #t))
+  (send d-score show #t))
 
 
-;;=================================================================================================================================
+;; ==================================================================================================================================
+;; Game screen
+;; ==================================================================================================================================
 (define frame (new frame%
                    [label "BlaCEkJack"]
                    [style '(hide-menu-bar)]
@@ -227,35 +247,35 @@
        [stretchable-width #f]))
 
 (define (crupier_turn list1)
+  (crupier_turn_aux (sets-values(crupier_values list1) 0)))
+
+(define (crupier_turn_aux list1)
   (cond((equal? (cadr (cddddr list1)) 1) (cond((>= (car(cdaddr list1)) 17) (set-score (table list1)))
-                                              (else (sleep 1.5)
-                                                    (crupier_turn (sets-values(cargar list1 2))))
+                                              (else (sleep 1)
+                                                    (crupier_turn_aux (sets-values(cargar list1 2) 0)))
                                               ))
        ((equal? (cadr (cddddr list1)) 2) (cond((>= (cadr(cdaddr list1)) 17) (set-score (table list1)))
-                                              (else (sleep 1.5)
-                                                    (crupier_turn (sets-values(cargar list1 3))))
+                                              (else (sleep 1)
+                                                    (crupier_turn_aux (sets-values(cargar list1 3) 0)))
                                               ))
        ((equal? (cadr (cddddr list1)) 3) (cond((>= (caddr(cdaddr list1)) 17) (set-score (table list1)))
-                                              (else (sleep 1.5)
-                                                    (crupier_turn (sets-values(cargar list1 4))))
+                                              (else (sleep 1)
+                                                    (crupier_turn_aux (sets-values(cargar list1 4) 0)))
                                               ))
        ))
 
-(define bas1(new message% [parent col3] [label ""] [stretchable-width #t])) ;[style '(deleted)]))
-(define bas2(new message% [parent col3] [label ""] [stretchable-width #t])) ;[style '(deleted)]))
-(define bas3(new message% [parent col3] [label ""] [stretchable-width #t])) ;[style '(deleted)]))
+(define bas1(new message% [parent col3] [label ""] [stretchable-width #t] [style '(deleted)]))
+(define bas2(new message% [parent col3] [label ""] [stretchable-width #t] [style '(deleted)]))
+(define bas3(new message% [parent col3] [label ""] [stretchable-width #t] [style '(deleted)]))
 
-(define logo (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TK.png"))))
-(define logo1 (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/TK(1).png"))))
-
-
-(define (sets-carts list1 list2 num1)
-  (cond((equal? num1 1) (cond((null? list2) list2)
-                             (else (send (car list1) set-label logo)
-                                   (sets-carts (cdr list1) (cdr list2) num1))))
+(define (sets-cards list1 list2 num1 num2)
+  (cond((equal? num2 1) (list))
+       ((equal? num1 1) (cond((null? list2) list2)
+                             (else (send (car list1) set-label (set-logo (car list2) 1))
+                                   (sets-cards (cdr list1) (cdr list2) num1 num2))))
        ((equal? num1 2) (cond((null? list2) list2)
-                             (else (send (car list1) set-label logo1)
-                                   (sets-carts (cdr list1) (cdr list2) num1))))
+                             (else (send (car list1) set-label (set-logo (car list2) 2))
+                                   (sets-cards (cdr list1) (cdr list2) num1 num2))))
        ))
 
 (define (new_rond list1)
@@ -284,14 +304,14 @@
               (crupier_turn list1))
              ))
        ((equal? (send bas1 get-label) "1") (send bas1 set-label "2")
-                                           (set! list3 (sets-values (cargar list1 1))))
+                                           (set! list3 (sets-values (cargar list1 1) 1)))
        ((equal? (send bas2 get-label) "1") (send bas2 set-label "2")
-                                           (cond((equal? (cadr (cddddr list1)) 1) (set! list3 (sets-values (cargar list1 1))))
-                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 2))))
+                                           (cond((equal? (cadr (cddddr list1)) 1) (set! list3 (sets-values (cargar list1 1) 1)))
+                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 2) 1)))
                                                 ))
        ((equal? (send bas3 get-label) "1") (send bas3 set-label "2")
-                                           (cond((equal? (cadr (cddddr list1)) 2) (set! list3 (sets-values (cargar list1 2))))
-                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 3))))
+                                           (cond((equal? (cadr (cddddr list1)) 2) (set! list3 (sets-values (cargar list1 2) 1)))
+                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 3) 1)))
                                                 ))
        )list3)
 
@@ -305,8 +325,9 @@
                                          (send n6 set-label (caar list1))
                                          (send pun3 set-label (string-append "Puntuacion: " (~v (caaddr list1))))
                                          (send pun1 set-label (string-append "     Puntuacion: " (~v (car(cdaddr list1)))))
-                                         (sets-carts (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1)
-                                         (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadr(cadddr list1)) 2))
+                                         (sets-cards (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1 0)
+                                         (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadr(cadddr list1)) 2 0)
+                                         (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        ((equal? (cadr (cddddr list1)) 2) (send bas2 set-label "0")
                                          (send row7 add-child p7)
                                          (send row7 add-child q7)
@@ -320,9 +341,10 @@
                                          (send pun2 set-label (string-append "Puntuacion: " (~v (caaddr list1))))
                                          (send pun4 set-label (string-append "Puntuacion: " (~v (car (cdaddr list1)))))
                                          (send pun1 set-label (string-append "     Puntuacion: " (~v (cadr (cdaddr list1)))))
-                                         (sets-carts (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1)
-                                         (sets-carts (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1)
-                                         (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (caddr(cadddr list1)) 2))
+                                         (sets-cards (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1 0)
+                                         (sets-cards (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1 0)
+                                         (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (caddr(cadddr list1)) 2 0)
+                                         (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        (else (send row7 add-child p7)
              (send row7 add-child q7)
              (send row8 add-child p8)
@@ -340,31 +362,32 @@
              (send pun3 set-label (string-append "Puntuacion: " (~v (car (cdaddr list1)))))
              (send pun4 set-label (string-append "Puntuacion: " (~v (cadr (cdaddr list1)))))
              (send pun1 set-label (string-append "     Puntuacion: " (~v (caddr (cdaddr list1)))))
-             (sets-carts (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1)
-             (sets-carts (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1)
-             (sets-carts (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1)
-             (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadddr(cadddr list1)) 2))
+             (sets-cards (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1  0)
+             (sets-cards (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (cadr(cadddr list1)) 1 0)
+             (sets-cards (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (caddr(cadddr list1)) 1 0)
+             (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadddr(cadddr list1)) 2 0)
+             (send c37 set-label (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/Back.png")))))
        )list1)
 
-(define(sets-values list1)
+(define(sets-values list1 num1)
   (cond((equal? (cadr (cddddr list1)) 1) (send pun3 set-label (string-append "Puntuacion: " (~v (caaddr list1))))
                                          (send pun1 set-label (string-append "     Puntuacion: " (~v (car(cdaddr list1)))))
-                                         (sets-carts (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1)
-                                         (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadr(cadddr list1)) 2))
+                                         (sets-cards (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1 0)
+                                         (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadr(cadddr list1)) 2 num1))
        ((equal? (cadr (cddddr list1)) 2) (send pun2 set-label (string-append "Puntuacion: " (~v (caaddr list1))))
                                          (send pun4 set-label (string-append "Puntuacion: " (~v (car (cdaddr list1)))))
                                          (send pun1 set-label (string-append "     Puntuacion: " (~v (cadr (cdaddr list1)))))
-                                         (sets-carts (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1)
-                                         (sets-carts (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1)
-                                         (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (caddr(cadddr list1)) 2))
+                                         (sets-cards (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1 0)
+                                         (sets-cards (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1 0)
+                                         (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (caddr(cadddr list1)) 2 num1))
        (else (send pun2 set-label (string-append "Puntuacion: " (~v (caaddr list1))))
              (send pun3 set-label (string-append "Puntuacion: " (~v (car (cdaddr list1)))))
              (send pun4 set-label (string-append "Puntuacion: " (~v (cadr (cdaddr list1)))))
              (send pun1 set-label (string-append "     Puntuacion: " (~v (caddr (cdaddr list1)))))
-             (sets-carts (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1)
-             (sets-carts (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (car(cadddr list1)) 1)
-             (sets-carts (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (cadr(cadddr list1)) 1)
-             (sets-carts (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadddr(cadddr list1)) 2))
+             (sets-cards (list c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12) (car(cadddr list1)) 1 0)
+             (sets-cards (list c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24) (cadr(cadddr list1)) 1 0)
+             (sets-cards (list c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36) (caddr(cadddr list1)) 1 0)
+             (sets-cards (list c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48) (cadddr(cadddr list1)) 2 num1))
        )list1)
 
 (new button% [parent col3]
@@ -474,10 +497,7 @@
        [stretchable-height #t]
        [stretchable-width #t]))
 
-(define empty (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/E.png"))))
-(define empty1 (read-bitmap (get-pure-port (string->url "file:////home/samuel/Escritorio/Cursos/Lenguajes/Funcional/DrRacket/Images/E(1).png"))))
-
-;; Cartas 1
+;; Cards 1
 (define c1(new message%  [parent row10] [label empty][stretchable-width #t]))
 (define c2(new message%  [parent row10] [label empty][stretchable-width #t]))
 (define c3(new message%  [parent row10] [label empty][stretchable-width #t]))
@@ -491,7 +511,7 @@
 (define c11(new message% [parent row20] [label empty][stretchable-width #t]))
 (define c12(new message% [parent row20] [label empty][stretchable-width #t]))
 
-;; Cartas 2
+;; Cards 2
 (define c13(new message% [parent row11] [label empty][stretchable-width #t]))
 (define c14(new message% [parent row11] [label empty][stretchable-width #t]))
 (define c15(new message% [parent row11] [label empty][stretchable-width #t]))
@@ -505,7 +525,7 @@
 (define c23(new message% [parent row21] [label empty][stretchable-width #t]))
 (define c24(new message% [parent row21] [label empty][stretchable-width #t]))
 
-;; Cartas 3
+;; Cards 3
 (define c25(new message% [parent row13] [label empty][stretchable-width #t]))
 (define c26(new message% [parent row13] [label empty][stretchable-width #t]))
 (define c27(new message% [parent row13] [label empty][stretchable-width #t]))
@@ -519,7 +539,7 @@
 (define c35(new message% [parent row23] [label empty][stretchable-width #t]))
 (define c36(new message% [parent row23] [label empty][stretchable-width #t]))
 
-;; Cartas Crupier
+;; Cards Crupier
 (define c37(new message% [parent row14] [label empty1][stretchable-width #t]))
 (define c38(new message% [parent row14] [label empty1][stretchable-width #t]))
 (define c39(new message% [parent row14] [label empty1][stretchable-width #t]))
@@ -534,7 +554,9 @@
 (define c48(new message% [parent row24] [label empty1][stretchable-width #t]))
 
 
-;; ==============================================================================================================================
+;; ==================================================================================================================================
+;; Home Screen
+;; ==================================================================================================================================
 
 (define dialog (instantiate dialog% ("BlaCEkJack")))
 
@@ -555,7 +577,6 @@
                  )]
      )
 
-;; estudiar lambda
 (define(error)
   (send tfield1 set-value "error")
   (send tfield2 set-value "error")
@@ -569,10 +590,10 @@
 (define(bCEj list1)
   (send frame show #t)
   (send dialog show #f)
-  (set! list3 (sets-values-i (actualizar list1 (list 0 0 0 0))))
+  (set! list3 (sets-values-i (start_values(dealCards (actualize list1 (list 0 0 0 0))))))
   )
 
-(define(verificar)
+(define(inspect)
   (cond((equal? (send tfield1 get-value) "") #t)
        ((equal? (send tfield2 get-value) "") #t)
        ((equal? (send tfield3 get-value) "") #t)
@@ -588,11 +609,9 @@
      [parent panel]
      [label "Ok"]
      [callback (lambda (button event)
-                 (cond((equal? (verificar) #t) (error))
+                 (cond((equal? (inspect) #t) (error))
                       (else (bCEj (list (send tfield1 get-value) (send tfield2 get-value) (send tfield3 get-value)))))
                  )]
      )
  
 (send dialog show #t)
-
-;;==============================================================================================================================
