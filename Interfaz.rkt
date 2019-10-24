@@ -443,6 +443,7 @@
   (new horizontal-panel%
        [parent col4]
        [style       '(border)]
+       [stretchable-height #t]
        [stretchable-width #t]))
 
 (define row20

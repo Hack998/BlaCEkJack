@@ -2,11 +2,6 @@
 (require racket/draw
          net/url)
 
-(define cards '("A1" "B1" "C1" "D1" "E1" "F1" "G1" "H1" "I1" "J1" "K1" "L1" "M1"
-                "A2" "B2" "C2" "D2" "E2" "F2" "G1" "H2" "I2" "J2" "K2" "L2" "M2"
-                "A3" "B3" "C3" "D3" "E3" "F3" "G3" "H3" "I3" "J3" "K3" "L3" "M3"
-                "A4" "B4" "C4" "D4" "E4" "F4" "G4" "H4" "I4" "J4" "K4" "L4" "M4"))
-
 ;; ==================================================================================================================================
 ;; Actualize
 ;; Initializes the data of the players
@@ -14,9 +9,21 @@
 ;; listnum: List containing the victories of the players
 ;; ==================================================================================================================================
 (define(actualize list1 listnum)
-  (cond((equal? (count list1) 1) (list (actualize_aux list1) (list (car listnum) (cadr listnum)) '(0 0) '(() ()) (shuffleDeck cards 51) 1))
-       ((equal? (count list1) 2) (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum)) '(0 0 0) '(() () ()) (shuffleDeck cards 51) 2))
-       (else (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum) (cadddr listnum)) '(0 0 0 0) '(() () () ()) (shuffleDeck cards 51) 3))
+  (cond((equal? (count list1) 1) (list (actualize_aux list1) (list (car listnum) (cadr listnum)) '(0 0) '(() ()) (shuffleDeck
+                                                                                                                  (list "A1" "B1" "C1" "D1" "E1" "F1" "G1" "H1" "I1" "J1" "K1" "L1" "M1"
+                                                                                                                        "A2" "B2" "C2" "D2" "E2" "F2" "G1" "H2" "I2" "J2" "K2" "L2" "M2"
+                                                                                                                        "A3" "B3" "C3" "D3" "E3" "F3" "G3" "H3" "I3" "J3" "K3" "L3" "M3"
+                                                                                                                        "A4" "B4" "C4" "D4" "E4" "F4" "G4" "H4" "I4" "J4" "K4" "L4" "M4") 51) 1))
+       ((equal? (count list1) 2) (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum)) '(0 0 0) '(() () ()) (shuffleDeck
+                                                                                                                                       (list "A1" "B1" "C1" "D1" "E1" "F1" "G1" "H1" "I1" "J1" "K1" "L1" "M1"
+                                                                                                                                             "A2" "B2" "C2" "D2" "E2" "F2" "G1" "H2" "I2" "J2" "K2" "L2" "M2"
+                                                                                                                                             "A3" "B3" "C3" "D3" "E3" "F3" "G3" "H3" "I3" "J3" "K3" "L3" "M3"
+                                                                                                                                             "A4" "B4" "C4" "D4" "E4" "F4" "G4" "H4" "I4" "J4" "K4" "L4" "M4") 51) 2))
+       (else (list (actualize_aux list1) (list (car listnum) (cadr listnum) (caddr listnum) (cadddr listnum)) '(0 0 0 0) '(() () () ()) (shuffleDeck
+                                                                                                                                         (list "A1" "B1" "C1" "D1" "E1" "F1" "G1" "H1" "I1" "J1" "K1" "L1" "M1"
+                                                                                                                                               "A2" "B2" "C2" "D2" "E2" "F2" "G1" "H2" "I2" "J2" "K2" "L2" "M2"
+                                                                                                                                               "A3" "B3" "C3" "D3" "E3" "F3" "G3" "H3" "I3" "J3" "K3" "L3" "M3"
+                                                                                                                                               "A4" "B4" "C4" "D4" "E4" "F4" "G4" "H4" "I4" "J4" "K4" "L4" "M4") 51) 3))
        ))
 
 (define(actualize_aux list1)
@@ -152,11 +159,15 @@
 ;; list1: List containing the possible winners
 ;; num: Indicate how many winners there can be
 ;; ==================================================================================================================================
-(define(winner list1 num)
+(define(winner list1 num jack)
   (cond((equal? num 0) list1)
        ((null? list1) list1)
-       ((< 21 (cadar list1)) (cons (car list1) (winner (cdr list1) num)))
-       (else (cons (list (caar list1) (cadar list1) "Yes" (+ 1 (car(cdddar list1)))) (winner (cdr list1) 0)))
+       ((< 21 (cadar list1)) (cons (car list1) (winner (cdr list1) num jack)))
+       (else (cond ((equal? jack 0) (cons (list (caar list1) (cadar list1) "Yes" (+ 1 (car(cdddar list1)))) (winner (cdr list1) 0 jack)))
+                   (else (cond((equal? (caar list1) jack) (cons (list (caar list1) (cadar list1) "BlackJack" (+ 1 (car(cdddar list1)))) (winner (cdr list1) 0 0)))
+                              (else (cons (car list1) (winner (cdr list1) num jack)))
+                              ))
+                   ))
        ))
 
 ;; ==================================================================================================================================
@@ -165,7 +176,7 @@
 ;; list1: List passed by user interface
 ;; ==================================================================================================================================
 (define(table list1)
-  (append (list (cadr(cddddr list1))) (winner(table_aux list1 (bigger (caddr list1)))1) (list(car list1))))
+  (append (list (cadr(cddddr list1))) (winner(table_aux list1 (bigger (caddr list1))) 1 (blackjack list1)) (list(car list1))))
 
 (define(table_aux list1 max)
   (cond((null? max) '())
@@ -177,6 +188,29 @@
                                           (table_aux (eliminate list1 2) (bigger (eliminate_aux(caddr list1) 2)))))
        ((equal? max (caddr(cdaddr list1))) (cons(list (car(cdddar list1)) (caddr(cdaddr list1)) "" (cadr(cddadr list1)))
                                            (table_aux (eliminate list1 3) (bigger (eliminate_aux(caddr list1) 3)))))
+       ))
+
+;; ==================================================================================================================================
+;; BlackJack
+;; Check if there is a player who meets BlackJack
+;; list1: List passed by user interface
+;; ==================================================================================================================================
+(define (blackjack list1)
+  (cond((equal? 1 (cadr(cddddr list1))) (cond((and (equal? 21 (caaddr list1)) (equal? 2 (length (car(cadddr list1))))) (caar list1))
+                                             ((and (equal? 21 (car(cdaddr list1))) (equal? 2 (length (cadr(cadddr list1))))) (cadar list1))
+                                             (else 0)
+                                             ))
+       ((equal? 2 (cadr(cddddr list1))) (cond((and (equal? 21 (caaddr list1)) (equal? 2 (length (car(cadddr list1))))) (caar list1))
+                                             ((and (equal? 21 (car(cdaddr list1))) (equal? 2 (length (cadr(cadddr list1))))) (cadar list1))
+                                             ((and (equal? 21 (cadr(cdaddr list1))) (equal? 2 (length (caddr(cadddr list1))))) (caddar list1))
+                                             (else 0)
+                                             ))
+       ((equal? 3 (cadr(cddddr list1))) (cond((and (equal? 21 (caaddr list1)) (equal? 2 (length (car(cadddr list1))))) (caar list1))
+                                             ((and (equal? 21 (car(cdaddr list1))) (equal? 2 (length (cadr(cadddr list1))))) (cadar list1))
+                                             ((and (equal? 21 (cadr(cdaddr list1))) (equal? 2 (length (caddr(cadddr list1))))) (caddar list1))
+                                             ((and (equal? 21 (caddr(cdaddr list1))) (equal? 2 (length (cadddr(cadddr list1))))) (car(cdddar list1)))
+                                             (else 0)
+                                             ))
        ))
 
 ;; ==================================================================================================================================
@@ -400,7 +434,6 @@
 ;; list1: list passed by user interface
 ;; plyr: number of Player who ask for card
 ;;===================================================================================================================================
-;; (dealACard(start_values(dealCards (actualize '("a" "b" "c") '(0 0 0 0)))) 1)
 (define (dealACard list1 plyr)
   (cond ((null? list1)
          '())
