@@ -63,6 +63,31 @@
        ))
 
 ;; ==================================================================================================================================
+;; Inspect
+;; Check the names of the players
+;; name1: First Player Name
+;; name2: Name of the second player
+;; name3: Name of the third player
+;; ==================================================================================================================================
+(define(inspect name1 name2 name3)
+  (cond((equal? (string-trim name1) "") #t)
+       ((equal? (string-trim name2) "") #t)
+       ((equal? (string-trim name3) "") #t)
+       ((equal? name1 "Crupier") #t)
+       ((equal? name2 "Crupier") #t)
+       ((equal? name3 "Crupier") #t)
+       ((and (equal? name1 "-") (equal? name2 "-") (equal? name3 "-")) #t)
+       ((and (equal? name1 name2) (not(equal? name1 "-"))) #t)
+       ((and (equal? name1 name3) (not(equal? name1 "-"))) #t)
+       ((and (equal? name2 name3) (not(equal? name2 "-"))) #t)
+       ((and (> (string-length name1) 1) (equal? (string-ref name1 0) #\-)) #t)
+       ((and (> (string-length name2) 1) (equal? (string-ref name2 0) #\-)) #t)
+       ((and (> (string-length name3) 1) (equal? (string-ref name3 0) #\-)) #t)
+       (else #f)
+       )
+  )
+
+;; ==================================================================================================================================
 ;; Crupier values
 ;; Restart the Crupier score
 ;; list1: List with all the data players
@@ -129,6 +154,7 @@
 ;; ==================================================================================================================================
 (define(winner list1 num)
   (cond((equal? num 0) list1)
+       ((null? list1) list1)
        ((< 21 (cadar list1)) (cons (car list1) (winner (cdr list1) num)))
        (else (cons (list (caar list1) (cadar list1) "Yes" (+ 1 (car(cdddar list1)))) (winner (cdr list1) 0)))
        ))
@@ -374,7 +400,7 @@
 ;; list1: list passed by user interface
 ;; plyr: number of Player who ask for card
 ;;===================================================================================================================================
-
+;; (dealACard(start_values(dealCards (actualize '("a" "b" "c") '(0 0 0 0)))) 1)
 (define (dealACard list1 plyr)
   (cond ((null? list1)
          '())
@@ -457,4 +483,5 @@
           ))
    )
 )
+
 (provide (all-defined-out))

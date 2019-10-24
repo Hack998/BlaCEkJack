@@ -126,7 +126,6 @@
 (define row1
   (new horizontal-panel%
        [parent frame]
-       [style       '(border)]
        [stretchable-height #t]))
 
 (define row2
@@ -143,35 +142,35 @@
 (define col2
   (new vertical-panel%
        [parent row1]
-       [style '(border)]
+       [style       '(border)]
        [stretchable-height #t]))
 (define col3
   (new vertical-panel%
        [parent row1]
+       [style       '(border)]
        [min-width 150]
-       [style '(border)]
        [stretchable-width #f]))
 
 (define col4
   (new vertical-panel%
        [parent row2]
-       [style '(border)]
+       [style       '(border)]
        [stretchable-height #t]))
 (define col5
   (new vertical-panel%
        [parent row2]
-       [style '(border)]
+       [style       '(border)]
        [stretchable-height #t]))
 (define col6
   (new vertical-panel%
        [parent row2]
-       [style '(border)]
+       [style       '(border)]
        [stretchable-height #t]))
 
 (define row3
   (new horizontal-panel%
        [parent col2]
-       [style '(border)]
+       [style       '(border)]
        [min-width 500]	 
        [min-height 50]
        [stretchable-height #f]
@@ -200,9 +199,9 @@
 (define row5
   (new horizontal-panel%
        [parent col5]
-       [style       '(border)]
        [min-width 250]	 
        [min-height 50]
+       [style       '(border)]
        [stretchable-height #f]
        [stretchable-width #f]))
 
@@ -224,24 +223,24 @@
 (define row7
   (new horizontal-panel%
        [parent col4]
-       [style       '(border)]
        [min-width 250]	 
+       [style       '(border)]
        [min-height 50]
        [stretchable-height #f]
        [stretchable-width #f]))
 (define row8
   (new horizontal-panel%
        [parent col5]
-       [style       '(border)]
        [min-width 250]	 
+       [style       '(border)]
        [min-height 50]
        [stretchable-height #f]
        [stretchable-width #f]))
 (define row9
   (new horizontal-panel%
        [parent col6]
-       [style       '(border)]
        [min-width 250]	 
+       [style       '(border)]
        [min-height 50]
        [stretchable-height #f]
        [stretchable-width #f]))
@@ -252,15 +251,15 @@
 (define (crupier_turn_aux list1)
   (cond((equal? (cadr (cddddr list1)) 1) (cond((>= (car(cdaddr list1)) 17) (set-score (table list1)))
                                               (else (sleep 1)
-                                                    (crupier_turn_aux (sets-values(cargar list1 2) 0)))
+                                                    (crupier_turn_aux (sets-values(dealACard list1 2) 0)))
                                               ))
        ((equal? (cadr (cddddr list1)) 2) (cond((>= (cadr(cdaddr list1)) 17) (set-score (table list1)))
                                               (else (sleep 1)
-                                                    (crupier_turn_aux (sets-values(cargar list1 3) 0)))
+                                                    (crupier_turn_aux (sets-values(dealACard list1 3) 0)))
                                               ))
        ((equal? (cadr (cddddr list1)) 3) (cond((>= (caddr(cdaddr list1)) 17) (set-score (table list1)))
                                               (else (sleep 1)
-                                                    (crupier_turn_aux (sets-values(cargar list1 4) 0)))
+                                                    (crupier_turn_aux (sets-values(dealACard list1 4) 0)))
                                               ))
        ))
 
@@ -304,14 +303,14 @@
               (crupier_turn list1))
              ))
        ((equal? (send bas1 get-label) "1") (send bas1 set-label "2")
-                                           (set! list3 (sets-values (cargar list1 1) 1)))
+                                           (set! list3 (sets-values (dealACard list1 1) 1)))
        ((equal? (send bas2 get-label) "1") (send bas2 set-label "2")
-                                           (cond((equal? (cadr (cddddr list1)) 1) (set! list3 (sets-values (cargar list1 1) 1)))
-                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 2) 1)))
+                                           (cond((equal? (cadr (cddddr list1)) 1) (set! list3 (sets-values (dealACard list1 1) 1)))
+                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (dealACard list1 2) 1)))
                                                 ))
        ((equal? (send bas3 get-label) "1") (send bas3 set-label "2")
-                                           (cond((equal? (cadr (cddddr list1)) 2) (set! list3 (sets-values (cargar list1 2) 1)))
-                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (cargar list1 3) 1)))
+                                           (cond((equal? (cadr (cddddr list1)) 2) (set! list3 (sets-values (dealACard list1 2) 1)))
+                                                ((equal? (cadr (cddddr list1)) 3) (set! list3 (sets-values (dealACard list1 3) 1)))
                                                 ))
        )list3)
 
@@ -444,7 +443,6 @@
   (new horizontal-panel%
        [parent col4]
        [style       '(border)]
-       [stretchable-height #t]
        [stretchable-width #t]))
 
 (define row20
@@ -593,23 +591,11 @@
   (set! list3 (sets-values-i (start_values(dealCards (actualize list1 (list 0 0 0 0))))))
   )
 
-(define(inspect)
-  (cond((equal? (send tfield1 get-value) "") #t)
-       ((equal? (send tfield2 get-value) "") #t)
-       ((equal? (send tfield3 get-value) "") #t)
-       ((equal? (send tfield1 get-value) "Crupier") #t)
-       ((equal? (send tfield2 get-value) "Crupier") #t)
-       ((equal? (send tfield3 get-value) "Crupier") #t)
-       ((and (equal? (send tfield1 get-value) "-") (equal? (send tfield2 get-value) "-") (equal? (send tfield3 get-value) "-")) #t)
-       (else #f)
-       )
-  )
-
 (new button%
      [parent panel]
      [label "Ok"]
      [callback (lambda (button event)
-                 (cond((equal? (inspect) #t) (error))
+                 (cond((equal? (inspect (send tfield1 get-value) (send tfield2 get-value) (send tfield3 get-value)) #t) (error))
                       (else (bCEj (list (send tfield1 get-value) (send tfield2 get-value) (send tfield3 get-value)))))
                  )]
      )
